@@ -77,4 +77,3 @@ claims. [Deficiencies](docs/deficiency-list.md) track remaining work.
 BACnet MS/TP is an unverified stretch goal requiring a separately validated stack
 and adapter. Do not assume the BACpypes3 IP implementation provides MS/TP support.
 
-

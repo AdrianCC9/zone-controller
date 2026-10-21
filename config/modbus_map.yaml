@@ -1,0 +1,6 @@
+# Do not poll hardware until verified against the exact device manual.
+verified: false
+device: XY-MD02
+serial: {port: /dev/serial/by-id/UNASSIGNED, baudrate: 9600, parity: N, stopbits: 1}
+slave_id: 1
+registers: []

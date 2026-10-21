@@ -1,0 +1,389 @@
+Home BAS Edge Controller — Build Guide & Resume Section
+Oct 20, 2026 · @Adrian Caricari
+The project: a single-zone BAS controller for your own house
+Build a working building automation controller for one zone of your house on the Raspberry Pi 4 — real field sensors, a written sequence of operations, camera-based occupancy, and every point published over BACnet/IP and Modbus TCP so a commercial front-end could discover it. Repo name: zone-controller.
+The household problem. A two-storey house with one thermostat in a downstairs hallway is a zoning problem, not a thermostat problem. The upstairs runs several degrees off the stat in shoulder season, the furnace or fan runs on a clock whether anyone is home or not, and there is no runtime, temperature or energy history to argue with. That is the exact failure mode a BAS technician is hired to fix in a commercial building, at 1/200th the scale.
+What it does. Reads space temperature, humidity and CO₂ plus supply-air temperature from real sensors on I²C, 1-Wire and RS-485. Counts people in the room from the Pi camera without storing images. Runs a documented sequence of operations — occupancy schedule, unoccupied setback, deadband, minimum on/off timers, trim-and-respond setpoint reset, CO₂-based ventilation. Commands a booster fan or damper through a relay. Trends every point to a historian, draws graphics in Grafana, raises alarms on faults, and exposes the whole point list as BACnet objects a supervisor can read and command.
+The one-sentence interview pitch. "My house has one thermostat for two floors, so my room runs about 3 °C hot in the fall. I built a zone controller for it on a Raspberry Pi — real sensors on RS-485 and I²C, a written sequence of operations with trim-and-respond reset, occupancy setback off a camera, trending into a time-series database, and it serves its points over BACnet/IP so I could point a real front-end at it and command the fan from there."
+That sentence is the whole point of the project. It is a homeowner problem anyone understands, and every noun in it is on the job posting.
+Temperatures throughout are °C; swap to °F if you prefer.
+Why this project has the highest hiring ROI
+Entry-level BAS postings ask for the same short list over and over, and one project can hit almost all of it. A Watershed Technologies BAS technician posting asks for work on low-voltage field devices — sensors, actuators, relays, valves — plus TCP/IP and MS/TP network troubleshooting, BACnet and Modbus integration, configuring and verifying sequences of operation, building graphics, and completing commissioning checklists and deficiency lists. A Modern Niagara BAS technician posting asks for BACnet IP and MS/TP plus Modbus device integration and basic IP networking. The zone controller produces evidence for every one of those lines.
+Leave Niagara out of the build, and say why. Niagara 4 Workbench is licence-gated through Tridium and its partners, and the Level 1 certification runs roughly US$2,400–$3,800 — normally employer-paid once you are hired. Do not spend money chasing it. Instead, build the concepts the TCP curriculum covers — stations and points, control logic, schedules, PID loops, alarms, histories and charts, graphics, Haystack tagging, BACnet integration, Modbus integration — in open tooling, and say exactly that in the interview: "I built the same concept stack the N4 TCP covers; I'll pick up Workbench in weeks once I have a licence." That reframes your gap as a tooling gap, not a knowledge gap, which is the only honest and the only persuasive version.
+What makes it beat the obvious alternatives.
+Project
+Why it is weaker
+Home Assistant smart-home setup
+Configuration, not engineering. No protocol work, no sequence you wrote, no commissioning evidence. Every candidate has one.
+A pure software/data portfolio project
+Proves you can code, which is not what is in doubt. Says nothing about field devices, wiring or protocols.
+A PLC ladder-logic simulator
+Closer, but simulated I/O only. No real sensors, no RS-485 bus, no BACnet.
+This project
+Real field devices on real buses, a sequence of operations you wrote and verified, and documentation a BAS shop would recognise.
+The documents matter more than the code. The thing that separates this from a hobby build is the paperwork a real technician produces: a points list, a written sequence of operations, a commissioning checklist with point-to-point verification signed off, a network riser diagram, and a deficiency log. Bring those to the interview on paper. Most entry-level candidates bring a GitHub link; almost none bring a points list.
+It also covers your industrial-controls interviews. Modbus RTU over RS-485, relay outputs, state machines with interlocks and minimum on/off timers, and HMI-style graphics are the same vocabulary on a machine-builder floor as in a mechanical room. The one project serves both directions you are applying in.
+Bill of materials
+You already have the controller: Raspberry Pi 4, camera module, microSD. Everything below is additive. Prices are approximate CAD as of late 2026 — treat them as planning figures, not quotes.
+Tier 1 — the minimum that makes it a real BAS (~$200). Do not skip any of these; each one maps to a line on a job posting.
+Item
+Qty
+~CAD
+What it proves
+SHT41 or SHT31 temp/RH breakout (I²C)
+2
+40
+Space sensors — the bread-and-butter BAS input
+DS18B20 waterproof probe (1-Wire)
+2
+16
+Supply-air and return-air temperature
+USB-to-RS485 adapter (FTDI chipset)
+1
+15
+The RS-485 field bus every BAS and machine shop runs
+XY-MD02 Modbus RTU temp/RH transmitter
+1
+25
+A real third-party Modbus slave to integrate and map
+4-channel opto-isolated relay board (dry contact)
+1
+15
+Binary outputs — your command to the field
+Breadboard, jumpers, pull-up resistors, 120 Ω terminators
+—
+25
+Bus termination is an interview question
+USB SSD or high-endurance microSD
+1
+45
+A historian writing every 15 s will kill a normal SD card
+Digital multimeter
+1
+40
+You will be asked if you own one
+Tier 2 — what makes the photos look professional (~$180). This tier is why a hiring manager believes you touched hardware.
+Item
+Qty
+~CAD
+What it proves
+Plastic enclosure, DIN rail, DIN terminal blocks
+—
+60
+Panel layout and landed, labelled terminations
+Ferrule kit + crimper
+1
+45
+Nobody with field experience lands bare stranded wire
+18/2 and 18/4 shielded plenum cable (small spool)
+—
+40
+Correct cable for low-voltage control, shield grounded at one end
+Wire labels / label printer tape
+—
+20
+Every conductor tagged to the points list
+24 VAC 40 VA transformer
+1
+25
+The standard BAS control voltage
+Tier 3 — the actuator that actually fixes your house (~$50–200). Pick one.
+Option
+~CAD
+Notes
+6" inline duct booster fan on a relay-switched outlet
+50
+Safest. Plug-in load, no permanent wiring, solves the upstairs problem directly
+Motorised round damper + Honeywell ARD or Belimo 24 V actuator
+150–200
+Most authentic — you commission a real actuator with an end-switch
+SCD41 CO₂ sensor (I²C)
+70
+Not an actuator, but unlocks the demand-control ventilation sequence, which is a strong talking point
+Safety — read before you buy. Keep everything you build at 24 VAC or below. Read the furnace's thermostat call signals (W, Y, G) through an optocoupler as read-only inputs; do not drive them. Do not open the furnace control board, and do not do any 120 V work — if you want branch-circuit energy metering, have a licensed electrician install the meter, or skip it. "I kept the scope to 24 V and read-only on the appliance side" is a better answer in an interview than a story about rewiring your own furnace.
+The full stack
+Every row below either appears on BAS job postings by name or produces an artifact you can show. Nothing here is decoration — if you cannot explain why a tool is in the project, cut it.
+Protocols and standards — the part that gets you the interview
+What
+Tool
+Why it is on the posting
+BACnet/IP
+BACpypes3 (Python, actively maintained)
+The protocol of commercial HVAC. You will serve AI, AV, BI, BV and BO objects with a working priority array
+BACnet MS/TP
+BACpypes3 over the USB-RS485 adapter
+MS/TP is named explicitly on postings and is where most field troubleshooting happens
+Modbus RTU + TCP
+pymodbus
+You poll a third-party RTU slave over RS-485 and also expose a TCP slave — both directions of integration
+MQTT
+Mosquitto broker + paho-mqtt
+The transport for cloud/remote monitoring, which is where BAS is heading
+IP networking
+Static addressing, VLAN or subnet separation, tcpdump
+"Basic IP networking" is on every posting
+Packet analysis
+Wireshark with the BACnet and Modbus dissectors
+Capturing a Who-Is/I-Am exchange and reading it is a senior-tech skill you can demo in 60 seconds
+Semantic tagging
+Project Haystack tags, optionally Brick Schema
+Tagging is a module in the Niagara TCP course; knowing it early is unusual
+Control and logic
+What
+Tool
+Why
+Sequence of operations
+Python state machine, written spec first
+ASHRAE Guideline 36 concepts: occupancy modes, deadband, setpoint reset, trim-and-respond, minimum on/off timers, staging
+Loop control
+simple-pid or your own PI implementation
+PID loops are a TCP module; you should be able to explain reset windup
+Flow-based logic
+Node-RED
+Visually close to Niagara's wire sheet, and widely used in building IoT. Build one sequence in Node-RED and the same one in Python so you can speak to both
+Simulation harness
+A simple RC thermal model of the room, in Python
+Lets you verify sequences without waiting for weather. "Simulate and verify sequences of operation" is a literal posting line
+Data, graphics and operations
+What
+Tool
+Why
+Historian
+InfluxDB or TimescaleDB on PostgreSQL
+Trending and histories. TimescaleDB keeps you on SQL, which plays to what you already have
+Graphics / dashboards
+Grafana
+The direct analogue of Niagara Px graphics. Build a floor-plan-style view, not just line charts
+Alarming
+Grafana alert rules + a Python fault-detection module
+Alarms are a TCP module; FDD is what energy-monitoring firms sell
+Vision
+Picamera2 + OpenCV + a TFLite or YOLO-nano person detector
+Occupancy sensing. Process frames in memory, store only a count — say this out loud, it is the privacy answer
+Containerisation
+Docker + Docker Compose
+How the InfluxDB/Grafana/Mosquitto stack gets reproducible
+Service management
+Linux (Raspberry Pi OS Lite 64-bit), systemd units, journald
+A controller that does not come back after a power cut is not a controller
+Version control + CI
+Git, GitHub, GitHub Actions running pytest and ruff
+Shows the software discipline that BAS shops do not usually get from a technician hire
+Config
+YAML point database driving the whole application
+One file defines every point; the BACnet server, historian and graphics all read it. This is the design decision to brag about
+Deliberately excluded. Kubernetes, a cloud account, a React front-end, a trained-from-scratch ML model. None of them appear on a BAS posting and each one costs weeks you should spend on the field side.
+System architecture
+Everything above the field layer reads the same point database, so adding a point means editing one YAML file rather than five modules. That single design decision is the thing worth explaining in an interview — it is also how commercial BAS platforms are structured, and it is why the BACnet server, the historian and the graphics never drift out of sync.
+Build guide, phases 0–4: controller, field devices, protocols, sequence
+Budget six to eight weeks at 8–10 hours a week. Do the phases in order — each one is a checkpoint you could stop at and still have something to talk about.
+Phase 0 — Controller foundation (week 1)
+1. Flash Raspberry Pi OS Lite 64-bit with Raspberry Pi Imager. In the imager's settings, set hostname zc-1 (controllers get tags, not pet names), enable SSH with a public key, and set your Wi-Fi or Ethernet. If you bought the USB SSD, boot from it — a historian writing every 15 seconds will destroy a consumer microSD inside a year.
+2. Give it a static IP. BAS controllers do not move. Use nmcli con mod to set a fixed address, gateway and DNS, and record it in your network documentation.
+3. sudo apt update && sudo apt full-upgrade, then install git, python3-venv, i2c-tools, docker.io, docker-compose-plugin.
+4. Enable the buses: sudo raspi-config → Interface Options → I2C and 1-Wire. Add dtoverlay=w1-gpio,gpiopin=4 to /boot/firmware/config.txt and reboot.
+5. Create the GitHub repo zone-controller and the skeleton: src/, config/, docs/, tests/, docker/.
+6. Write the points list before you write any code. This is the single most important habit in the project. One YAML file defines every point, and the driver layer, BACnet server, historian and graphics all read from it.
+# config/points.yaml
+points:
+  ZN-T:
+    description: Zone 1 space temperature
+    bacnet: { type: analogInput, instance: 1 }
+    units: degreesCelsius
+    source: { driver: i2c_sht4x, address: 0x44, field: temperature }
+    haystack: [point, sensor, temp, air, zone]
+    trend: { interval_s: 15, deadband: 0.1 }
+    alarm: { low: 10.0, high: 32.0, stale_s: 120 }
+  ZN-SP-OCC:
+    description: Zone 1 occupied heating setpoint
+    bacnet: { type: analogValue, instance: 1, commandable: true, relinquish_default: 21.5 }
+    units: degreesCelsius
+    source: { driver: setpoint }
+    haystack: [point, sp, temp, air, zone, occ]
+  FAN-CMD:
+    description: Zone 1 booster fan command
+    bacnet: { type: binaryOutput, instance: 1, commandable: true, relinquish_default: inactive }
+    source: { driver: gpio_relay, channel: 0 }
+    haystack: [point, cmd, fan, zone]
+Aim for 14–18 points: zone temp/RH/CO₂, supply-air and return-air temp, occupancy count, occupied/standby/unoccupied setpoints, fan command and status, damper command and position, system mode (a multi-state value), fan runtime hours, and an alarm count.
+Phase 1 — Field devices and point-to-point commissioning (week 2)
+1. Wire the SHT41 breakouts to 3.3 V, GND, SDA (GPIO 2) and SCL (GPIO 3). Confirm with i2cdetect -y 1 — you should see 0x44. Two sensors on one bus need different addresses or an I²C multiplexer; solving that is a legitimate talking point.
+2. Wire the DS18B20 probes to GPIO 4 with a 4.7 kΩ pull-up to 3.3 V. Read them from /sys/bus/w1/devices/28-*/w1_slave. Tape one in the supply register and one in the return grille.
+3. Mount the relay board. Use the opto-isolated inputs, power the coils from a separate supply, and keep the coil side physically separated from the Pi side in the enclosure.
+4. Write one driver module per bus under src/drivers/, all exposing the same interface: read() -> (value, reliability). Reliability matters — a BAS point carries status flags, and a point reading a dead sensor must report fault, not the last good number.
+5. Commission every point. For each one, verify against an independent reference: an ice-water bath for 0 °C, a second thermometer at room temperature, a multimeter across the relay contacts for the binary outputs. Record each in docs/commissioning-checklist.md with date, expected, actual, pass/fail and your initials. This document is a hiring asset.
+Phase 2 — Modbus RTU over RS-485 (week 3)
+1. Wire the XY-MD02 to the USB-RS485 adapter: A to A, B to B, and a common ground reference. Put a 120 Ω resistor across A–B at each physical end of the bus. If you run shielded cable, ground the drain at one end only.
+2. Confirm the slave's address and framing (commonly ID 1, 9600 8N1) and poll it with pymodbus: temperature and humidity live in holding registers, scaled by 10.
+3. Write docs/modbus-register-map.md — register, data type, scaling, engineering units, read/write. Producing a register map from a vendor datasheet is the integration job.
+4. Expose your own points as a Modbus TCP slave on the Pi as well, so the controller is both master and slave. Two directions of integration in one device.
+5. Break it on purpose and write down what you see. Swap A and B. Set the wrong baud rate. Remove a terminator. Set two devices to the same slave ID. Log the symptom of each in docs/troubleshooting-log.md. When an interviewer asks what a missing terminator looks like on a long run, you will have an answer from your own bench instead of from a textbook.
+Phase 3 — BACnet (week 4)
+1. pip install bacpypes3. Build a BACnet/IP device object — pick a device instance like 260001, give it an object name matching the hostname, and generate its child objects from points.yaml.
+2. Implement the properties that matter, not just present-value: units, description, statusFlags, outOfService, and for commandable objects the full priority array with a relinquish default.
+3. Verify from a second machine. Use YABE (Yet Another BACnet Explorer) from a Windows laptop, or the bacpypes3 console and the bacnet-stack CLI tools. Do a Who-Is, confirm the I-Am, browse the object list, read a property, then write one.
+4. Understand the priority array before the interview. Write the fan command at priority 8 (operator override), confirm it holds, then relinquish it and watch control return to your sequence at priority 16. Being able to explain this clearly puts you ahead of people with two years in the field.
+5. Capture a Who-Is/I-Am exchange in Wireshark with the BACnet dissector, save the .pcap in docs/captures/, and screenshot it for the portfolio.
+6. Stretch goal: bring up BACnet MS/TP on the RS-485 port. MS/TP is named on postings and is where most real field troubleshooting happens.
+Phase 4 — The sequence of operations (week 5)
+Write the sequence as a document before you write the code. Numbered clauses, plain language, in docs/sequence-of-operations.md. This is how real controls work is specified and it is the artifact that will most surprise an interviewer.
+1. Modes. Occupied, Standby, Unoccupied, Warm-up. Mode is driven by a weekday/weekend schedule combined with the occupancy count: scheduled-occupied with zero occupants for 20 minutes drops to Standby.
+2. Setpoints. Occupied 21.5 °C heating / 24.5 °C cooling; Standby widens by 1.5 °C each way; Unoccupied 17 °C / 28 °C. All values come from points.yaml — no magic numbers in code.
+3. Interlock. The heating setpoint may never exceed the cooling setpoint minus the deadband. Enforce this in code and reject writes that would violate it.
+4. Fan control. Start when the zone deviates more than 0.5 °C from the effective setpoint. Minimum on-time 10 minutes, minimum off-time 5 minutes, to prevent short-cycling.
+5. Trim and respond. Every 2 minutes, a zone more than 0.5 °C above setpoint generates one request. With no requests, trim the damper or fan output down 2%; with requests, respond up 4% each, to a configured maximum. This is a Guideline 36 pattern and naming it by name lands well.
+6. Demand-controlled ventilation. Above 1000 ppm CO₂, drive to minimum ventilation position; above 1400 ppm, go to maximum.
+7. Safeties, highest priority. Supply-air temperature above 50 °C shuts the system down and alarms. Any sensor stale for more than 5 minutes fails the affected loop to a safe default and alarms — never run control logic on a stale value.
+Implement it as an explicit state machine with every transition logged with its reason, then build a small RC thermal model of the room in tests/ and run a simulated week through pytest: assert the zone stays in band, the fan never cycles faster than the minimum timers allow, and the mode transitions happen where the schedule says. "Simulate and verify sequences of operation" is a literal line on the posting; almost nobody can show it.
+Build guide, phases 5–8: occupancy, trending, alarms, documentation
+Phase 5 — Camera occupancy sensing (week 6)
+1. Use picamera2 to capture frames and run a small person detector — a TFLite MobileNet-SSD or EfficientDet-Lite0, or a YOLO-nano model exported to ONNX. On a Pi 4 run it at 1 frame every 5–10 seconds, not 30 fps. Occupancy changes slowly; a controller that burns 100% CPU on vision is a bad controller.
+2. Never write a frame to disk. Detect in memory, publish only an integer count, discard the frame. Put this in the README as an explicit design decision.
+3. Smooth the output before it reaches the sequence. A single frame is noisy — use a rolling median over several minutes and require a sustained zero before declaring the zone empty. Raw detections driving setpoints will make your HVAC chatter, and finding that out yourself is a good story.
+4. Publish the count as a BACnet analog input and over MQTT, exactly like any other sensor. The sequence should not know or care that this point came from a camera.
+5. Keep a fallback: if the vision service dies, the point goes fault and the sequence reverts to schedule-only. Graceful degradation is a controls instinct worth demonstrating.
+The privacy framing is part of the pitch: "It is an occupancy sensor that happens to use a camera. No image ever leaves memory, and the only thing stored is a count."
+Phase 6 — Historian and graphics (week 6–7)
+1. Stand up InfluxDB (or TimescaleDB on PostgreSQL) and Grafana with Docker Compose, committed to the repo so the whole stack rebuilds with one command.
+2. Trend every point on the interval and deadband defined in points.yaml. Deadband trending — only logging a change that exceeds a threshold — is how real BAS historians keep database size sane, and it is worth implementing rather than just sampling on a timer.
+3. Set a retention policy: raw data at 15 seconds for 30 days, downsampled hourly averages kept indefinitely. Say "retention and downsampling policy" in the interview.
+4. Build two Grafana views. One is an operator graphics page laid out like a BAS Px view — a schematic of the zone with live values beside the equipment, mode and setpoints shown, colour-coded on alarm. The other is an analytics page: fan runtime per day, degree-hours out of band, CO₂ distribution, and a before/after comparison of upstairs temperature deviation.
+5. Capture a baseline before you commission the sequence. Run in monitoring-only mode for one to two weeks first. Without a baseline you cannot quantify the improvement, and a number on your resume is worth more than an adjective.
+Phase 7 — Alarming and fault detection (week 7)
+1. Implement standard BAS alarm handling in Python: a limit with a deadband so alarms do not chatter, a delay before the alarm is raised, acknowledgement, and an alarm history. Expose an active-alarm count as a BACnet point.
+2. Write four or five fault-detection rules — this is the layer energy-monitoring companies actually sell:
+    ◦ Short cycling — more than N fan starts per hour.
+    ◦ Sensor drift or failure — zone and return-air temperature disagreeing by more than a threshold for an extended period, or a reading frozen at the identical value.
+    ◦ Simultaneous heating and cooling — the classic waste fault.
+    ◦ Command/status mismatch — fan commanded on but the current or feedback point says off. This is the fault that proves you understand why BAS points come in command/status pairs.
+    ◦ Schedule override left in place — a priority-array entry held for more than 24 hours.
+3. Route alarms to email or a phone notification through Grafana alerting or MQTT. Being woken by your own alarm at 3 a.m. is an experience worth having before a customer's building does it to you.
+Phase 8 — Tagging and as-built documentation (week 8)
+This phase takes the least effort and carries the most weight. Do not skip it.
+1. Tag every point with Project Haystack tags in points.yaml, and export a Haystack-style model of the site, equipment and points. Optionally also emit a Brick Schema RDF model. Tagging is a module in the Niagara TCP curriculum, and arriving already fluent in it is genuinely unusual for an entry-level candidate.
+2. Produce the as-built package in docs/, and print it for interviews:
+    ◦ Points list — name, description, type, units, address, BACnet object, Haystack tags.
+    ◦ Sequence of operations — the numbered clauses from Phase 4.
+    ◦ Network riser diagram — what is on IP, what is on RS-485, addresses, terminators.
+    ◦ Panel layout and wiring schedule — terminal numbers to conductors to devices.
+    ◦ Commissioning checklist — point-to-point verification, signed and dated.
+    ◦ Troubleshooting log — the faults you induced and what each looked like.
+    ◦ Deficiency list — what is still open. Every real project has one, and listing yours honestly reads as experience rather than weakness.
+3. Write the README as a project handover document: the problem, the architecture, the point list, how to run it, and a measured result with real numbers.
+4. Record a three-minute screen capture walking through the Grafana graphics, a BACnet write from YABE, and the fan responding. Link it in the README. Hiring managers who will not clone a repo will watch three minutes.
+Definition of done and repo layout
+The project is finished when all of the following are true. Tick them off as you go.
+[ ] Controller runs unattended for 30 consecutive days and survives a power cut without manual intervention
+[ ] At least 14 points live, each commissioned against an independent reference and signed off on the checklist
+[ ] A third-party Modbus RTU device polled over RS-485, with a register map document you wrote
+[ ] The Pi discoverable over BACnet/IP by an external client, with a working priority array you can demonstrate
+[ ] A written sequence of operations, implemented, and verified against a simulated week in pytest
+[ ] 30 days of trend data with a retention and downsampling policy in place
+[ ] Two Grafana views: an operator graphics page and an analytics page
+[ ] Five fault-detection rules firing correctly, with alarms routed off the device
+[ ] Every point Haystack-tagged and the model exported
+[ ] Full as-built package in docs/, printed
+[ ] A measured before/after result with real numbers
+[ ] A three-minute demo video linked in the README
+Repo layout
+zone-controller/
+├── README.md                 # handover doc: problem, architecture, result
+├── docker/compose.yaml       # influxdb, grafana, mosquitto
+├── config/
+│   ├── points.yaml           # the point database — the heart of the project
+│   ├── schedule.yaml
+│   └── modbus_map.yaml
+├── src/
+│   ├── drivers/              # i2c, onewire, gpio, modbus_rtu — one interface
+│   ├── protocols/            # bacnet_server, modbus_tcp_server, mqtt_client
+│   ├── control/              # state machine, pid, trim_and_respond, safeties
+│   ├── vision/               # occupancy counter
+│   ├── historian/            # deadband trending writer
+│   └── alarms/               # limits, delays, acknowledgement, fdd rules
+├── tests/
+│   ├── test_sequence.py      # simulated week against the RC thermal model
+│   └── thermal_model.py
+└── docs/
+    ├── points-list.md
+    ├── sequence-of-operations.md
+    ├── network-riser.png
+    ├── panel-layout.png
+    ├── wiring-schedule.md
+    ├── modbus-register-map.md
+    ├── commissioning-checklist.md
+    ├── troubleshooting-log.md
+    ├── deficiency-list.md
+    └── captures/             # wireshark pcaps
+The three artifacts that do the actual work. If you run short on time, protect these: the printed points list and sequence of operations, the commissioning checklist, and the demo video. They are what a BAS hiring manager recognises as the output of someone who has done the job.
+Resume section and interview prep
+Fill in the bracketed numbers from your own baseline comparison — do not ship this with placeholders in it.
+Full version — use when the project is your strongest item and you have the space:
+ZONE CONTROLLER — Building Automation System (Personal Project)      Oct 2026 – Present
+Python · BACnet/IP & MS/TP · Modbus RTU/TCP · MQTT · Raspberry Pi · Linux ·
+InfluxDB · Grafana · Docker · Node-RED · OpenCV · Project Haystack · Git
+
+• Designed, built and commissioned a single-zone building automation controller on a
+  Raspberry Pi 4, integrating 16 physical points across I2C, 1-Wire, GPIO and RS-485,
+  with point-to-point verification documented against independent references.
+
+• Implemented a BACnet/IP server exposing all points as standard objects with full
+  priority-array command handling; verified discovery, read, write and relinquish from
+  a third-party BACnet client and validated Who-Is/I-Am traffic in Wireshark.
+
+• Integrated a third-party Modbus RTU device over RS-485 and exposed the controller as
+  a Modbus TCP slave; produced a register map and a fault-injection troubleshooting log
+  covering bus polarity, baud mismatch, missing termination and duplicate slave IDs.
+
+• Authored and implemented a written sequence of operations using ASHRAE Guideline 36
+  patterns — occupancy setback, deadband, minimum on/off timing, trim-and-respond
+  setpoint reset and CO2 demand-controlled ventilation — and verified it against a
+  simulated week using an RC thermal model in pytest before deployment.
+
+• Deployed a containerised historian and operator graphics stack (InfluxDB, Grafana,
+  Mosquitto) with deadband trending and a 30-day retention policy, plus five fault-
+  detection rules including short-cycling, command/status mismatch and sensor drift.
+
+• Reduced upstairs temperature deviation from setpoint by [X]% and cut fan runtime by
+  [Y] hours/month against a two-week pre-commissioning baseline.
+Tight version — three bullets, when the resume is crowded:
+ZONE CONTROLLER — Building Automation System (Personal Project)      Oct 2026 – Present
+Python · BACnet/IP · Modbus RTU/TCP · Raspberry Pi · Linux · InfluxDB · Grafana · Docker
+
+• Built and commissioned a 16-point BAS controller on a Raspberry Pi 4, serving all
+  points over BACnet/IP with full priority-array handling and integrating a third-party
+  Modbus RTU device over RS-485; verified with a BACnet client and Wireshark captures.
+
+• Authored and implemented a sequence of operations using ASHRAE Guideline 36 patterns
+  (occupancy setback, deadband, minimum on/off timing, trim-and-respond reset), verified
+  against a simulated week in pytest before deployment.
+
+• Deployed trending, operator graphics and fault detection (InfluxDB, Grafana, Docker);
+  reduced temperature deviation from setpoint by [X]% against a measured baseline.
+Add to your skills section: BACnet/IP, BACnet MS/TP, Modbus RTU/TCP, RS-485, MQTT, sequences of operation, point-to-point commissioning, Project Haystack tagging, Wireshark.
+Interview talking points
+Lead with the house, not the tech. "One thermostat, two floors, my room runs 3 °C hot" — then let them ask how you fixed it. The technical depth lands better as answers than as an opening monologue.
+Have these ready, because they are the questions that follow.
+They will ask
+What you should be able to do
+Explain the BACnet priority array
+Walk through writing at priority 8, why it holds over your sequence at 16, and what relinquishing does. Know why a stuck priority entry is a real building problem
+BACnet/IP vs MS/TP — when each?
+IP for backbone and supervisors, MS/TP for daisy-chained field controllers on RS-485. Know that MS/TP is token-passing and that device count and baud rate drive response time
+Why 120 Ω terminators?
+Reflections on an unterminated line. You induced this yourself — describe the symptom you actually saw
+Why do points come in command/status pairs?
+A command is what you asked for; status is what happened. Your fault rule on mismatch is the answer
+Why minimum on/off timers?
+Short cycling, equipment wear, inrush current. You have the fan-starts-per-hour data to show it
+What is trim and respond?
+Zone requests trimming a setpoint toward efficiency until a zone complains. Name Guideline 36
+A point reads zero — walk me through it
+Sensor, wiring, termination, address, scaling, then the logic. Field-first order, not code-first
+What would you do differently?
+Have a real answer. A good one: "I drove setpoints off raw camera detections at first and made the fan chatter — I added median smoothing and a sustained-zero requirement"
+Handle the Niagara gap head-on
+You will be asked about Niagara. The answer: you built the same concept stack the N4 TCP course covers — points and control logic, schedules, PID, alarms, histories, graphics, Haystack tagging, BACnet and Modbus integration — in open tooling, because Workbench licensing is gated through Tridium partners. You are ready to certify on day one and expect to be productive in Workbench within weeks.
+Do not oversell it. Be clear that this is residential scale, that you have not commissioned a real air handler or a chiller plant, and that you want field time. A candidate who names the limits of their own project is more credible than one who does not.
+Two things to do while you build
+1. Start applying at Phase 4, not Phase 8. By then you have BACnet, Modbus and a working sequence — enough for a resume bullet in the present tense. The last four weeks sharpen it; they are not the entry ticket.
+2. Bring the paperwork to the interview on paper. The points list and the sequence of operations, printed. Sliding those across the table changes the conversation from "a student who did a Raspberry Pi project" to "someone who already produces our deliverables."

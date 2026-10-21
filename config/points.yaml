@@ -1,0 +1,508 @@
+{
+  "device": {
+    "name": "zc-1",
+    "bacnet_instance": 260001
+  },
+  "control": {
+    "deadband_c": 1.0,
+    "fan_start_delta_c": 0.5,
+    "fan_min_on_s": 600,
+    "fan_min_off_s": 300,
+    "standby_after_s": 1200,
+    "warmup_before_s": 1800,
+    "supply_high_c": 50.0,
+    "trim_interval_s": 120,
+    "trim_percent": 2.0,
+    "respond_percent": 4.0,
+    "output_max_percent": 100.0,
+    "vent_min_percent": 20.0,
+    "co2_min_ppm": 1000,
+    "co2_max_ppm": 1400
+  },
+  "points": {
+    "ZN-T": {
+      "description": "Zone space temperature",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 1
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "i2c_sht4x",
+        "address": 68,
+        "field": "temperature"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "temp",
+        "air",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "ZN-RH": {
+      "description": "Zone relative humidity",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 2
+      },
+      "units": "percentRelativeHumidity",
+      "source": {
+        "driver": "i2c_sht4x",
+        "address": 68,
+        "field": "humidity"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "humidity",
+        "air",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "ZN-CO2": {
+      "description": "Zone carbon dioxide",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 3
+      },
+      "units": "partsPerMillion",
+      "source": {
+        "driver": "i2c_scd4x",
+        "address": 98
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "co2",
+        "air",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "SA-T": {
+      "description": "Supply air temperature",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 4
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "onewire",
+        "device_id": "UNASSIGNED"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "temp",
+        "air",
+        "discharge"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "RA-T": {
+      "description": "Return air temperature",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 5
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "onewire",
+        "device_id": "UNASSIGNED"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "temp",
+        "air",
+        "return"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "OCC-COUNT": {
+      "description": "Smoothed people count",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 6
+      },
+      "units": "noUnits",
+      "source": {
+        "driver": "vision"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "occupancy",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "RTU-T": {
+      "description": "Third-party transmitter temperature",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 7
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "modbus_rtu",
+        "mapping": "UNVERIFIED"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "temp",
+        "air"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "RTU-RH": {
+      "description": "Third-party transmitter humidity",
+      "bacnet": {
+        "type": "analogInput",
+        "instance": 8
+      },
+      "units": "percentRelativeHumidity",
+      "source": {
+        "driver": "modbus_rtu",
+        "mapping": "UNVERIFIED"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "humidity",
+        "air"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "HTG-SP-OCC": {
+      "description": "Occupied heating setpoint",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 1,
+        "commandable": true,
+        "relinquish_default": 21.5
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "setpoint"
+      },
+      "haystack": [
+        "point",
+        "sp",
+        "temp",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "CLG-SP-OCC": {
+      "description": "Occupied cooling setpoint",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 2,
+        "commandable": true,
+        "relinquish_default": 24.5
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "setpoint"
+      },
+      "haystack": [
+        "point",
+        "sp",
+        "temp",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "HTG-SP-STBY": {
+      "description": "Standby heating setpoint",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 3,
+        "commandable": true,
+        "relinquish_default": 20.0
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "setpoint"
+      },
+      "haystack": [
+        "point",
+        "sp",
+        "temp",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "CLG-SP-STBY": {
+      "description": "Standby cooling setpoint",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 4,
+        "commandable": true,
+        "relinquish_default": 26.0
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "setpoint"
+      },
+      "haystack": [
+        "point",
+        "sp",
+        "temp",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "HTG-SP-UNOCC": {
+      "description": "Unoccupied heating setpoint",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 5,
+        "commandable": true,
+        "relinquish_default": 17.0
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "setpoint"
+      },
+      "haystack": [
+        "point",
+        "sp",
+        "temp",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "CLG-SP-UNOCC": {
+      "description": "Unoccupied cooling setpoint",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 6,
+        "commandable": true,
+        "relinquish_default": 28.0
+      },
+      "units": "degreesCelsius",
+      "source": {
+        "driver": "setpoint"
+      },
+      "haystack": [
+        "point",
+        "sp",
+        "temp",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "FAN-CMD": {
+      "description": "Booster fan command",
+      "bacnet": {
+        "type": "binaryOutput",
+        "instance": 1,
+        "commandable": true,
+        "relinquish_default": false
+      },
+      "units": "noUnits",
+      "source": {
+        "driver": "gpio_relay",
+        "channel": 0
+      },
+      "haystack": [
+        "point",
+        "cmd",
+        "fan",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "FAN-STS": {
+      "description": "Independent fan feedback",
+      "bacnet": {
+        "type": "binaryInput",
+        "instance": 1
+      },
+      "units": "noUnits",
+      "source": {
+        "driver": "gpio_input",
+        "pin": "UNASSIGNED"
+      },
+      "haystack": [
+        "point",
+        "sensor",
+        "run",
+        "fan",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "alarm": {
+        "stale_s": 300
+      }
+    },
+    "DMP-CMD": {
+      "description": "Proposed ventilation damper command",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 7,
+        "commandable": true,
+        "relinquish_default": 0.0
+      },
+      "units": "percent",
+      "source": {
+        "driver": "virtual"
+      },
+      "haystack": [
+        "point",
+        "cmd",
+        "damper",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "SYS-MODE": {
+      "description": "Zone operating mode",
+      "bacnet": {
+        "type": "multiStateValue",
+        "instance": 1
+      },
+      "units": "noUnits",
+      "source": {
+        "driver": "derived"
+      },
+      "haystack": [
+        "point",
+        "mode",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      },
+      "states": [
+        "Unoccupied",
+        "Occupied",
+        "Standby",
+        "Warm-up"
+      ]
+    },
+    "FAN-RUNTIME": {
+      "description": "Fan runtime hours",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 8
+      },
+      "units": "hours",
+      "source": {
+        "driver": "derived"
+      },
+      "haystack": [
+        "point",
+        "his",
+        "run",
+        "fan"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    },
+    "ALM-COUNT": {
+      "description": "Active alarm count",
+      "bacnet": {
+        "type": "analogValue",
+        "instance": 9
+      },
+      "units": "noUnits",
+      "source": {
+        "driver": "derived"
+      },
+      "haystack": [
+        "point",
+        "alarm",
+        "zone"
+      ],
+      "trend": {
+        "interval_s": 15,
+        "deadband": 0.1
+      }
+    }
+  }
+}
